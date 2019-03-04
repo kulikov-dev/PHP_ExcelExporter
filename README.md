@@ -5,6 +5,9 @@ Agregate solutions for XLSX export (https://github.com/mk-j/PHP_XLSXWriter) and 
 For using include ExporterService.php and call function 
 * kulikovdev\ExporterService::ExportJsonToFile($json, $fileFormat);
 
+where $json is an exporting table in JSON format, $fileFormat is the type of exported file (ExportTypeEnum)
+
+
 Also you have to setup folders for saving exported files. There are two settings inside ExporterService.php:
 * settingsUrlExportPath: path to a folder for saving from the website root folder
 * settingsExportPath.: relative path to a folder for saving from the library folder.
