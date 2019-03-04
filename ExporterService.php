@@ -47,7 +47,7 @@ class ExporterService {
 		$filePath = ExporterService::settingsExportPath . $fileName;
    		$delimiter = ';';
 		$temp_memory = fopen($filePath, 'w');
-	
+	        fprintf($temp_memory, chr(0xEF).chr(0xBB).chr(0xBF));
 		foreach ($someArray as $line) {
 			fputcsv($temp_memory, $line, $delimiter);
 		}
