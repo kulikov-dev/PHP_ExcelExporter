@@ -2,40 +2,13 @@
 namespace kulikovdev;
 use kulikovdev\ExporterService as ExporterService;
 require_once 'lib/xlsxwriter.php';
-
-spl_autoload_register(function ($class) {
-    	// base directory for the namespace prefix
-    	$base_dir = __DIR__ . '/lib/php_writeexcel/';
-    	// does the class use the namespace prefix?
-    	$len = strlen($prefix);
-		if (strncmp($prefix, $class, $len) !== 0) {
-    	    // no, move to the next registered autoloader
-			return;
-    	}
-
-    	// get the relative class name
-    	$relative_class = substr($class, $len);
-
-		// replace the namespace prefix with the base directory, replace namespace
-    	// separators with directory separators in the relative class name, append
-   	 	// with .php
-		$file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
-
-    	// if the file exists, require it
-    	if (file_exists($file)) {
-        	require $file;
-    	}
-	});
-
+include 'Autoloader.php';
 
 class ExporterService {
 
-    /**
- 	* Config: path from site root folder to folder for saving exported files
- 	*/ 
 	const settingsUrlExportPath = 'TempExport';
 	/**
- 	* Config: relative path from service folder to folder for saving exported files
+ 	* Config: path to save exported files.
  	*/ 
 	const settingsExportPath = "../TempExport/";
 
@@ -47,7 +20,7 @@ class ExporterService {
 		$filePath = ExporterService::settingsExportPath . $fileName;
    		$delimiter = ';';
 		$temp_memory = fopen($filePath, 'w');
-	        fprintf($temp_memory, chr(0xEF).chr(0xBB).chr(0xBF));
+	    fprintf($temp_memory, chr(0xEF).chr(0xBB).chr(0xBF));
 		foreach ($someArray as $line) {
 			fputcsv($temp_memory, $line, $delimiter);
 		}
