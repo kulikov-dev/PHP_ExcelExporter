@@ -83,6 +83,11 @@ class ConverterService {
 	 * $exportType - output file format
 	 */ 
 	public static function ConvertCsvToExcel($inputFilePath, $exportType) {
+		if (!file_exists($inputFilePath)) {
+			echo 'File not found!';
+			return;
+		}
+		
 		ini_set('auto_detect_line_endings',TRUE);
 		switch ($exportType) {
     		case ExportTypeEnum.XLSX:
