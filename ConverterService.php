@@ -125,9 +125,16 @@ class ConverterService {
                 }
                 break;
             case 'xlsx':
-               	$xlsx = new \XLSXReader($inputFilePath);
-		$data = $xlsx->getSheetData("data");
-		$fileName = ExporterService::ExportToCsv($data);
+  		$xlsx = new \XLSXReader($inputFilePath);
+		$sheets = $xlsx->getSheetNames();
+		if (!empty($sheets)) {
+			$values = array_values($sheets);
+			$data = $xlsx->getSheetData($values[0]);
+			$fileName = ExporterService::ExportToCsv($data);
+		} else {
+			echo 'Empty file!';
+			return;
+		}
                 break;
         }
         if (!$hasError) {
