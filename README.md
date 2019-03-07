@@ -1,6 +1,6 @@
 # PHP_ExcelExporter
   Small library written specially for export/convert_from_CSV huge tables to XLS, XLSX and CSV tables. 
-Agregate solutions for XLSX export (https://github.com/mk-j/PHP_XLSXWriter) and XLS export (https://github.com/thoroc/php_writeexcel)
+Agregate fastest solutions for XLSX export (https://github.com/mk-j/PHP_XLSXWriter) and XLS export (https://github.com/MAXakaWIZARD/xls-writer). And XLSX import (https://github.com/gneustaetter/XLSXReader), XLS import (https://github.com/shuchkin/simplexls).
   
 For export JSON data include ExporterService.php and call function 
 * kulikovdev\ExporterService::ExportJsonToFile($json, $fileFormat);
