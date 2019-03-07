@@ -17,7 +17,8 @@ class ConverterService {
 
     /**
      * Copy csv file to another place;
-     * $inputFilePath - relative path to csv file;
+     * @param $inputFilePath - relative path to csv file;
+     * @return generated filename
      */
     private static function CopyCsv($inputFilePath) {
         $fileName = uniqid() . ".csv";
@@ -36,7 +37,8 @@ class ConverterService {
     }
     /**
      * Convert csv file to XLSX format;
-     * $inputFilePath - relative path to csv file;
+     * @param $inputFilePath - relative path to csv file;
+     * @return generated filename
      */
     private static function ConvertToXlsx($inputFilePath) {
         $handle = fopen($inputFilePath, "r");
@@ -53,7 +55,8 @@ class ConverterService {
     }
     /**
      * Convert csv file to XLS format;
-     * $inputFilePath - relative path to csv file;
+     * @param $inputFilePath - relative path to csv file;
+     * @return generated filename
      */
     private static function ConvertToXls($inputFilePath) {
         $handle = fopen($inputFilePath, "r");
@@ -78,8 +81,8 @@ class ConverterService {
 
     /**
      * Convert csv file to Excel file;
-     * $inputFilePath - relative path to csv file;
-     * $exportType - output file format
+     * @param $inputFilePath relative path to csv file;
+     * @param $exportType output file format
      */
     public static function ConvertCsvToExcel($inputFilePath, $exportType) {
         if (!file_exists($inputFilePath)) {
@@ -105,8 +108,37 @@ class ConverterService {
     }
 
     /**
+     * Convert Xls to Csv file
+     * @param $inputFilePath - relative path to xls file;
+     * @return generated filename
+     */
+    private static function ConvertXlsToCsv($inputFilePath) {
+        if ($xlsx = \SimpleXLS::parse($inputFilePath) ) {
+            $fileName = ExporterService::ExportToCsv($xlsx->rows());
+            return $fileName;
+        } else {
+            throw new Exception(echo SimpleXLSX::parseError());
+        }
+    }
+    /**
+     * Convert Xlsx to Csv file
+     * @param $inputFilePath - relative path to xls file;
+     * @return generated filename
+     */
+    private static function ConvertXlsxToCsv($inputFilePath) {
+        $xlsx = new \XLSXReader($inputFilePath);
+        $sheets = $xlsx->getSheetNames();
+        if (!empty($sheets)) {
+            $values = array_values($sheets);
+            $data = $xlsx->getSheetData($values[0]);
+            return ExporterService::ExportToCsv($data);
+        } else {
+            throw new Exception("Empty file");
+        }
+    }
+    /**
      * Convert xls and xlsx files to csv file;
-     * $inputFilePath - relative path to Excel file;
+     * @param $inputFilePath relative path to Excel file;
      */
     public static function ConvertExcelToCsv($inputFilePath) {
         if (!file_exists($inputFilePath)) {
@@ -117,24 +149,10 @@ class ConverterService {
         $ext = pathinfo($inputFilePath, PATHINFO_EXTENSION);
         switch ($ext) {
             case 'xls':
-                if ( $xlsx = \SimpleXLS::parse($inputFilePath) ) {
-                    $fileName = ExporterService::ExportToCsv($xlsx->rows());
-                } else {
-                    $hasError = true;
-                    echo SimpleXLSX::parseError();
-                }
+                $fileName = self::ConvertXlsToCsv($inputFilePath);
                 break;
             case 'xlsx':
-  		$xlsx = new \XLSXReader($inputFilePath);
-		$sheets = $xlsx->getSheetNames();
-		if (!empty($sheets)) {
-			$values = array_values($sheets);
-			$data = $xlsx->getSheetData($values[0]);
-			$fileName = ExporterService::ExportToCsv($data);
-		} else {
-			echo 'Empty file!';
-			return;
-		}
+                $fileName = self::ConvertXlsxToCsv($inputFilePath);
                 break;
         }
         if (!$hasError) {
