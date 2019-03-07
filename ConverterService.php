@@ -125,12 +125,9 @@ class ConverterService {
                 }
                 break;
             case 'xlsx':
-                if ( $xlsx = \SimpleXLSX::parse($inputFilePath) ) {
-                    $fileName = ExporterService::ExportToCsv($xlsx->rows());
-                } else {
-                    $hasError = true;
-                    echo SimpleXLSX::parseError();
-                }
+               	$xlsx = new \XLSXReader($inputFilePath);
+		$data = $xlsx->getSheetData("data");
+		$fileName = ExporterService::ExportToCsv($data);
                 break;
         }
         if (!$hasError) {

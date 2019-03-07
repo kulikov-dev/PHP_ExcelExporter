@@ -1,7 +1,7 @@
 <?php
 
 require_once 'lib/Writers/xlsxwriter.php';
-require_once 'lib/Readers/SimpleXLSX.php';
+require_once 'lib/Readers/XLSXReader.php';
 require_once 'lib/Readers/SimpleXLS.php';
 
 spl_autoload_register(function ($class) {
