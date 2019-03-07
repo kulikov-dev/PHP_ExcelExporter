@@ -7,6 +7,7 @@ require_once 'lib/Readers/SimpleXLS.php';
 spl_autoload_register(function ($class) {
     // base directory for the namespace prefix
     $base_dir = __DIR__ . '/lib/Writers/php_writeexcel/';
+    $prefix = 'Xls';
     // does the class use the namespace prefix?
     $len = strlen($prefix);
     if (strncmp($prefix, $class, $len) !== 0) {
@@ -16,6 +17,7 @@ spl_autoload_register(function ($class) {
 
     // get the relative class name
     $relative_class = substr($class, $len);
+
 
     // replace the namespace prefix with the base directory, replace namespace
     // separators with directory separators in the relative class name, append

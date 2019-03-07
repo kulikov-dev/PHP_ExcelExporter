@@ -39,7 +39,7 @@ class ExporterService {
     private static function ExportToXls($arrayData) {
         $fileName = uniqid() . ".xls";
         $filePath = ExporterService::settingsExportPath . $fileName;
-        $workbook = &new \writeexcel_workbookbig($filePath);
+        $workbook = new \Xls\Workbook();
         $worksheet = &$workbook->addworksheet();
 
         $length = count($arrayData);
@@ -52,7 +52,7 @@ class ExporterService {
             }
         }
 
-        $workbook->close();
+        $workbook->save($filePath);
         return $fileName;
     }
     /**

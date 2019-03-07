@@ -62,7 +62,7 @@ class ConverterService {
         $handle = fopen($inputFilePath, "r");
         $fileName = uniqid() . ".xls";
         $filePath = ConverterService::settingsExportPath . $fileName;
-        $workbook = &new \writeexcel_workbookbig($filePath);
+        $workbook = new \Xls\Workbook();
         $worksheet = &$workbook->addworksheet();
         $lineCount = 0;
         while ( ($data = fgetcsv($handle,0,';') ) !== FALSE ) {
@@ -74,7 +74,7 @@ class ConverterService {
             ++$lineCount;
         }
 
-        $workbook->close();
+        $workbook->save($filePath);
         fclose($handle);
         return $fileName;
     }
