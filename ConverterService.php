@@ -117,7 +117,7 @@ class ConverterService {
             $fileName = ExporterService::ExportToCsv($xlsx->rows());
             return $fileName;
         } else {
-            throw new Exception(echo SimpleXLSX::parseError());
+            throw new Exception(SimpleXLSX::parseError());
         }
     }
     /**
