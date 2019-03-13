@@ -2,6 +2,10 @@
 namespace kulikovdev;
 include 'Autoloader.php';
 
+/**
+ * Class ConverterService
+ * @package kulikovdev
+ */
 class ConverterService {
     /**
      * @var string Config: relative path from service folder to folder for saving exported files
@@ -68,9 +72,9 @@ class ConverterService {
 
     /**
      * Convert csv file to Excel file;
-     * @param $inputFilePath relative path to csv file;
-     * @param $exportType output file format
-     * @return string filename of created file
+     * @param string $inputFilePath Relative path to csv file;
+     * @param ExportTypeEnum $exportType Output file format
+     * @return string Filename of created file
      */
     public function ConvertCsvToExcel($inputFilePath, $exportType) {
         if (!file_exists($inputFilePath)) {
@@ -96,8 +100,8 @@ class ConverterService {
     }
     /**
      * Convert xls and xlsx files to csv file;
-     * @param $inputFilePath relative path to Excel file;
-     * @return string filename of created file
+     * @param string $inputFilePath Relative path to Excel file;
+     * @return string Filename of created file
      */
     public function ConvertExcelToCsv($inputFilePath) {
         if (!file_exists($inputFilePath)) {
@@ -119,9 +123,9 @@ class ConverterService {
     }
     /**
      * Export json string to table file;
-     * @param $jsonTable dataTable data in JSON format
-     * @param $exportType output file format
-     * @return string filename of created file
+     * @param mixed $jsonTable DataTable data in JSON format
+     * @param ExportTypeEnum $exportType Output file format
+     * @return string Filename of created file
      */
     public function ExportJsonToFile($jsonTable, $exportType) {
         $arrayData = json_decode($jsonTable, true);
@@ -142,8 +146,8 @@ class ConverterService {
 
     /**
      * Copy csv file to another place;
-     * @param $inputFilePath - relative path to csv file;
-     * @return generated filename
+     * @param string $inputFilePath Relative path to csv file;
+     * @return string Filename of created file
      */
     private function CopyCsv($inputFilePath) {
         $fileName = uniqid() . ".csv";
@@ -162,8 +166,8 @@ class ConverterService {
     }
     /**
      * Convert csv file to XLSX format;
-     * @param $inputFilePath - relative path to csv file;
-     * @return generated filename
+     * @param string $inputFilePath Relative path to csv file;
+     * @return string Filename of created file
      */
     private function ConvertCsvToXlsx($inputFilePath) {
         $handle = fopen($inputFilePath, "r");
@@ -180,8 +184,8 @@ class ConverterService {
     }
     /**
      * Convert csv file to XLS format;
-     * @param $inputFilePath - relative path to csv file;
-     * @return generated filename
+     * @param string $inputFilePath Relative path to csv file;
+     * @return string Filename of created file
      */
     private function ConvertCsvToXls($inputFilePath) {
         $handle = fopen($inputFilePath, "r");
@@ -206,12 +210,12 @@ class ConverterService {
 
     /**
      * Convert Xls to Csv file
-     * @param $inputFilePath - relative path to xls file;
-     * @return generated filename
+     * @param string $inputFilePath Relative path to xls file;
+     * @return string Filename of created file
      */
     private function ConvertXlsToCsv($inputFilePath) {
         if ($xlsx = \SimpleXLS::parse($inputFilePath) ) {
-            $fileName = ConverterService::ExportToCsv($xlsx->rows());
+            $fileName = self::ExportArrayTableToCsv($xlsx->rows());
             return $fileName;
         } else {
             throw new Exception(SimpleXLSX::parseError());
@@ -219,8 +223,8 @@ class ConverterService {
     }
     /**
      * Convert Xlsx to Csv file
-     * @param $inputFilePath - relative path to xls file;
-     * @return generated filename
+     * @param string $inputFilePath Relative path to xls file;
+     * @return string Filename of created file
      */
     private function ConvertXlsxToCsv($inputFilePath) {
         $xlsx = new \XLSXReader($inputFilePath);
@@ -228,7 +232,7 @@ class ConverterService {
         if (!empty($sheets)) {
             $values = array_values($sheets);
             $data = $xlsx->getSheetData($values[0]);
-            return ConverterService::ExportToCsv($data);
+            return self::ExportArrayTableToCsv($data);
         } else {
             throw new Exception("Empty file");
         }
@@ -236,8 +240,8 @@ class ConverterService {
 
     /**
      * Export php-array to csv file;
-     * @param $arrayData datatable in array
-     * @return generated filename
+     * @param mixed $arrayData Datatable in array
+     * @return string Filename of created file
      */
     private function ExportArrayTableToCsv($arrayData) {
         $fileName = uniqid() . ".csv";
@@ -254,8 +258,8 @@ class ConverterService {
     }
     /**
      * Export php-array to xls file;
-     * @param $arrayData datatable in array
-     * @return generated filename
+     * @param mixed $arrayData Datatable in array
+     * @return string Filename of created file
      */
     private function ExportArrayTableToXls($arrayData) {
         $fileName = uniqid() . ".xls";
@@ -278,8 +282,8 @@ class ConverterService {
     }
     /**
      * Export php-array to xlsx file;
-     * @param $arrayData datatable in array
-     * @return generated filename
+     * @param mixed $arrayData Datatable in array
+     * @return string Filename of created file
      */
     private function ExportArrayTableToXlsx($arrayData) {
         $fileName = uniqid() . ".xlsx";
@@ -307,12 +311,12 @@ class ExportTypeEnum
     {
         switch ($fileFormatIndex) {
             case 0:
-                return ExportTypeEnum . XLSX;
+                return ExportTypeEnum.XLSX;
             case 1:
-                return ExportTypeEnum . XLS;
+                return ExportTypeEnum.XLS;
             case 2:
-                return ExportTypeEnum . CSV;
+                return ExportTypeEnum.CSV;
         }
-        return ExportTypeEnum . XLSX;
+        return ExportTypeEnum.XLSX;
     }
 }
