@@ -10,7 +10,7 @@ class ConverterService {
     /**
      * @var string Config: relative path from service folder to folder for saving exported files
      */
-    private $relativeExportPath = "../TempExport/";
+    private $relativeExportPath = "../reports/";
     /**
      * @return string Relative path from service folder to folder for saving exported files
      */
