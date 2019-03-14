@@ -84,13 +84,13 @@ class ConverterService {
         ini_set('auto_detect_line_endings',TRUE);
         $fileName = "";
         switch ($exportType) {
-            case ExportTypeEnum.XLSX:
+            case ExportTypeEnum::XLSX:
                 $fileName = self::ConvertCsvToXlsx($inputFilePath);
                 break;
-            case ExportTypeEnum.XLS:
+            case ExportTypeEnum::XLS:
                 $fileName = self::ConvertCsvToXls($inputFilePath);
                 break;
-            case ExportTypeEnum.CSV:
+            case ExportTypeEnum::CSV:
                 $fileName = self::CopyCsv($inputFilePath);
                 break;
         }
@@ -131,13 +131,13 @@ class ConverterService {
         $arrayData = json_decode($jsonTable, true);
         $fileName = "";
         switch ($exportType) {
-            case ExportTypeEnum.XLSX:
+            case ExportTypeEnum::XLSX:
                 $fileName = self::ExportArrayTableToXlsx($arrayData);
                 break;
-            case ExportTypeEnum.XLS:
+            case ExportTypeEnum::XLS:
                 $fileName = self::ExportArrayTableToXls($arrayData);
                 break;
-            case ExportTypeEnum.CSV:
+            case ExportTypeEnum::CSV:
                 $fileName = self::ExportArrayTableToCsv($arrayData);
                 break;
         }
@@ -311,12 +311,12 @@ class ExportTypeEnum
     {
         switch ($fileFormatIndex) {
             case 0:
-                return ExportTypeEnum.XLSX;
+                return ExportTypeEnum::XLSX;
             case 1:
-                return ExportTypeEnum.XLS;
+                return ExportTypeEnum::XLS;
             case 2:
-                return ExportTypeEnum.CSV;
+                return ExportTypeEnum::CSV;
         }
-        return ExportTypeEnum.XLSX;
+        return ExportTypeEnum::XLSX;
     }
 }
