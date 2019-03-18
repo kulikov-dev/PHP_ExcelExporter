@@ -99,17 +99,19 @@ class ConverterService {
         return $fileName;
     }
     /**
-     * Convert xls and xlsx files to csv file;
-     * @param string $inputFilePath Relative path to Excel file;
-     * @return string Filename of created file
-     */
-    public function ConvertExcelToCsv($inputFilePath) {
+    * Convert xls and xlsx files to csv file;
+    * @param string $inputFilePath Relative path to Excel file;
+    * @param string $customInputFileExtension Custom extention for the input file.
+    * @return string Filename of created file
+    */
+    public function ConvertExcelToCsv($inputFilePath, $customInputFileExtension = '') {
         if (!file_exists($inputFilePath)) {
             throw new Exception('File not found!');
         }
-
         $fileName = "";
-        $ext = pathinfo($inputFilePath, PATHINFO_EXTENSION);
+        $ext = $customInputFileExtension;
+        if (empty($customInputFileExtension))
+            $ext = pathinfo($inputFilePath, PATHINFO_EXTENSION);
         switch (strtolower($ext)) {
             case "xls":
                 $fileName = self::ConvertXlsToCsv($inputFilePath);
