@@ -1,5 +1,7 @@
 <?php
 namespace kulikovdev;
+use Exception;
+
 include 'Autoloader.php';
 
 /**
@@ -75,6 +77,7 @@ class ConverterService {
      * @param string $inputFilePath Relative path to csv file;
      * @param ExportTypeEnum $exportType Output file format
      * @return string Filename of created file
+     * @throws Exception File not found exception
      */
     public function ConvertCsvToExcel($inputFilePath, $exportType) {
         if (!file_exists($inputFilePath)) {
@@ -103,6 +106,7 @@ class ConverterService {
     * @param string $inputFilePath Relative path to Excel file;
     * @param string $customInputFileExtension Custom extention for the input file.
     * @return string Filename of created file
+    * @throws Exception File not found exception
     */
     public function ConvertExcelToCsv($inputFilePath, $customInputFileExtension = '') {
         if (!file_exists($inputFilePath)) {
@@ -214,6 +218,7 @@ class ConverterService {
      * Convert Xls to Csv file
      * @param string $inputFilePath Relative path to xls file;
      * @return string Filename of created file
+     * @throws Exception Incorrect XLS file
      */
     private function ConvertXlsToCsv($inputFilePath) {
         if ($xlsx = \SimpleXLS::parse($inputFilePath) ) {
@@ -227,6 +232,7 @@ class ConverterService {
      * Convert Xlsx to Csv file
      * @param string $inputFilePath Relative path to xls file;
      * @return string Filename of created file
+     * @throws Exception Incorrect XLSX file
      */
     private function ConvertXlsxToCsv($inputFilePath) {
         $xlsx = new \XLSXReader($inputFilePath);
@@ -254,6 +260,9 @@ class ConverterService {
         foreach ($arrayData as $line) {
             fputcsv($temp_memory, $line, $delimiter);
         }
+
+        $stat = fstat($temp_memory);
+        ftruncate($temp_memory, $stat['size']-1);
 
         fclose($temp_memory);
         return $fileName;
