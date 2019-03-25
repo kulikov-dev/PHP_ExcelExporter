@@ -470,15 +470,11 @@ class Worksheet extends BIFFwriter
      */
     public function write($row, $col, $value, $format = null)
     {
-        if ($this->looksLikeNumber($value)) {
+      /*  if ($this->looksLikeNumber($value)) {
             $this->writeNumber($row, $col, $value, $format);
-        } elseif ($this->looksLikeUrl($value)) {
-            $this->writeUrl($row, $col, $value, '', $format);
-        } elseif ($this->looksLikeFormula($value)) {
-            $this->writeFormula($row, $col, $value, $format);
-        } else {
+        } else {*/
             $this->writeString($row, $col, $value, $format);
-        }
+        //}
     }
 
     /**

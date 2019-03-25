@@ -150,6 +150,13 @@ class ConverterService {
         return $fileName;
     }
 
+    /** As fgetcsv depends on locals, we have to update encoding.
+     * @param $str Input string
+     * @return string Encoded string
+     */
+    private function ConvertEncoding($str ) {
+        return iconv( "Windows-1252", "UTF-8", $str );
+    }
     /**
      * Copy csv file to another place;
      * @param string $inputFilePath Relative path to csv file;
@@ -182,7 +189,8 @@ class ConverterService {
         $writer = new \XLSXWriter();
 
         while ( ($data = fgetcsv($handle,0,$this->delimiter, $this->enclosure) ) !== FALSE ) {
-            $writer->writeSheetRow('data', $data);
+            $row = array_map(array($this,"ConvertEncoding"), $data );
+            $writer->writeSheetRow('data', $row);
         }
         $writer->writeToFile($filePath);
         fclose($handle);
@@ -201,7 +209,8 @@ class ConverterService {
         $worksheet = &$workbook->addworksheet();
         $lineCount = 0;
         while ( ($data = fgetcsv($handle,0, $this->delimiter, $this->enclosure) ) !== FALSE ) {
-            $array = array_values($data);
+            $row = array_map(array($this,"ConvertEncoding"), $data );
+            $array = array_values($row);
             $subLength = count($array);
             for ($j = 0; $j < $subLength; $j++) {
                 $worksheet->write($lineCount,$j, (string)$array[$j]);
