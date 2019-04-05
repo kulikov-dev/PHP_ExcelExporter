@@ -9,6 +9,11 @@ include 'Autoloader.php';
  * @package kulikovdev
  */
 class ConverterService {
+    function __construct()
+    {
+        $this->bomString = chr(0xEF).chr(0xBB).chr(0xBF);
+    }
+
     /**
      * @var string Config: relative path from service folder to folder for saving exported files
      */
@@ -71,6 +76,33 @@ class ConverterService {
         }
     }
 
+
+    const defaultCsvEncoding = "Windows-1252";
+    /**
+     * @var string Encoding for input CSV file in CSV to Excel converting
+     */
+    private $csvEncoding = defaultCsvEncoding;
+    /**
+     * @return string Encoding for input CSV file in CSV to Excel converting
+     */
+    public function getCsvEncoding()
+    {
+        return $this->csvEncoding;
+    }
+    /**
+     * @param string $encoding Encoding for input CSV file in CSV to Excel converting
+     */
+    public function setCsvEncoding($encoding)
+    {
+        if ($encoding == ''){
+            $this->csvEncoding = defaultCsvEncoding;
+        }
+        else {
+            $this->csvEncoding = $encoding;
+        }
+    }
+
+    private $bomString;
 
     /**
      * Convert csv file to Excel file;
@@ -155,7 +187,13 @@ class ConverterService {
      * @return string Encoded string
      */
     private function ConvertEncoding($str ) {
-        return iconv( "Windows-1252", "UTF-8", $str );
+        $utf8 = 'UTF-8';
+        $user_encoding = $this->getCsvEncoding();
+        if ((strcasecmp($user_encoding, $utf8) == 0) or (mb_check_encoding($str, $utf8))) {
+            return $str;
+        }
+
+        return iconv( $user_encoding, $utf8, $str );
     }
     /**
      * Copy csv file to another place;
@@ -170,7 +208,7 @@ class ConverterService {
         $context = stream_context_create();
         $orig_file = fopen($outputFilePath, 'r', 1, $context);
         $temp_filename = tempnam(sys_get_temp_dir(), 'php_prepend_');
-        file_put_contents($temp_filename, chr(0xEF).chr(0xBB).chr(0xBF));		// for unicode supporting
+        file_put_contents($temp_filename, $this->bomString);		// for unicode supporting
         file_put_contents($temp_filename, $orig_file, FILE_APPEND);
         fclose($orig_file);
         unlink($outputFilePath);
@@ -188,7 +226,7 @@ class ConverterService {
         $filePath = $this->relativeExportPath . $fileName;
         $writer = new \XLSXWriter();
 
-        while ( ($data = fgetcsv($handle,0,$this->delimiter, $this->enclosure) ) !== FALSE ) {
+        while ( ($data = fgetcsv($handle,0,$this->getDelimiter(), $this->getEnclosure()) ) !== FALSE ) {
             $row = array_map(array($this,"ConvertEncoding"), $data );
             $writer->writeSheetRow('data', $row);
         }
@@ -208,7 +246,7 @@ class ConverterService {
         $workbook = new \Xls\Workbook();
         $worksheet = &$workbook->addworksheet();
         $lineCount = 0;
-        while ( ($data = fgetcsv($handle,0, $this->delimiter, $this->enclosure) ) !== FALSE ) {
+        while ( ($data = fgetcsv($handle,0, $this->getDelimiter(), $this->getEnclosure()) ) !== FALSE ) {
             $row = array_map(array($this,"ConvertEncoding"), $data );
             $array = array_values($row);
             $subLength = count($array);
@@ -265,7 +303,7 @@ class ConverterService {
         $filePath = $this->relativeExportPath . $fileName;
         $delimiter = ';';
         $temp_memory = fopen($filePath, 'w');
-        fprintf($temp_memory, chr(0xEF).chr(0xBB).chr(0xBF));
+        fprintf($temp_memory, $this->bomString);
         foreach ($arrayData as $line) {
             fputcsv($temp_memory, $line, $delimiter);
         }
