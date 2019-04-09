@@ -2,6 +2,9 @@
 
 namespace Xls;
 
+include_once  '\..\WarningHandling.php';
+use \WarningInfo;
+
 class Worksheet extends BIFFwriter
 {
     const BOF_TYPE = 0x0010;
@@ -601,6 +604,38 @@ class Worksheet extends BIFFwriter
         $this->appendRecord('Number', array($row, $col, $num, $format));
     }
 
+    /** Check cell value for excel limitation
+     * @param $value cell value
+     * @param $row_number row index
+     * @param $column_number col index
+     * @return string new cell value
+     */
+    protected function checkForValueLength($value, $row_number, $column_number) {
+        $strLength = strlen($value);
+        $output = $value;
+        if ($strLength > WorkBook::EXCEL_2007_MAX_CELL_LENGTH) {
+            $warning = new \WarningInfo($row_number, $column_number, WarningInfo::LongCellValue);
+
+            switch ($this->workbook->warningHandling) {
+                case 0:
+                    $output = substr($value, 0, WorkBook::EXCEL_2007_MAX_CELL_LENGTH);
+                    break;
+                case 1:
+                    $fileName = uniqid() . ".txt";
+                    $filePath = $this->workbook->waningsOutputPath . $fileName;
+                    $warning->fileName = $fileName;
+
+                    $handle = fopen($filePath,"wb");
+                    fwrite($handle, $value);
+                    fclose($handle);
+
+                    $output = $fileName;
+                    break;
+            }
+            $this->workbook->warnings[] = $warning;
+        }
+        return $output;
+    }
     /**
      * Write a string to the specified row and column (zero indexed).
      * NOTE: there is an Excel 5 defined limit of 255 characters.
@@ -619,6 +654,7 @@ class Worksheet extends BIFFwriter
 
         $this->addCell($row, $col);
 
+        $str = $this->checkForValueLength($str, $row, $col);
         $this->writeStringSST($row, $col, $str, $format);
     }
 

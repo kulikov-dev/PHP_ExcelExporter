@@ -14,6 +14,7 @@ class Workbook extends BIFFwriter
     const COUNTRY_USA = 1;
 
     const BOF_TYPE = 0x0005;
+    const EXCEL_2007_MAX_CELL_LENGTH = 32767;
 
     /**
      * Formula parser
@@ -98,6 +99,14 @@ class Workbook extends BIFFwriter
      * @var SharedStringsTable
      */
     protected $sst;
+
+    public $warnings = array();
+    public $warningHandling = 0;
+    /**
+     * @var string Config: relative path from service folder to folder for saving files with warnings
+     */
+    public $waningsOutputPath = '';
+    public function getWarnings() { return $this->warnings; }
 
     /**
      *

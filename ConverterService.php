@@ -6,11 +6,13 @@ include 'Autoloader.php';
 
 /**
  * Class ConverterService
+ * Provides functions for converting from csv to Excel xls/xlsx formats and vice versa
  * @package kulikovdev
  */
 class ConverterService {
-    function __construct()
-    {
+
+    private $bomString;
+    function __construct() {
         $this->bomString = chr(0xEF).chr(0xBB).chr(0xBF);
     }
 
@@ -21,15 +23,13 @@ class ConverterService {
     /**
      * @return string Relative path from service folder to folder for saving exported files
      */
-    public function getRelativeExportPath()
-    {
+    public function getRelativeExportPath() {
         return $this->relativeExportPath;
     }
     /**
      * @param string $relativeExportPath Relative path from service folder to folder for saving exported files
      */
-    public function setRelativeExportPath($relativeExportPath)
-    {
+    public function setRelativeExportPath($relativeExportPath) {
         $this->relativeExportPath = $relativeExportPath;
     }
 
@@ -40,15 +40,13 @@ class ConverterService {
     /**
      * @return string Delimiter for CSV parsing
      */
-    public function getDelimiter()
-    {
+    public function getDelimiter() {
         return $this->delimiter;
     }
     /**
      * @param string $delimiter Delimiter for CSV parsing
      */
-    public function setDelimiter($delimiter)
-    {
+    public function setDelimiter($delimiter) {
         $this->delimiter = $delimiter;
     }
 
@@ -59,15 +57,13 @@ class ConverterService {
     /**
      * @return string Enclosure for CSV parsing
      */
-    public function getEnclosure()
-    {
+    public function getEnclosure() {
         return $this->enclosure;
     }
     /**
      * @param string $enclosure Enclosure for CSV parsing
      */
-    public function setEnclosure($enclosure)
-    {
+    public function setEnclosure($enclosure) {
         if ($enclosure == ''){
             $this->enclosure = chr(0);  // as we can't place empty enclosure to fgetcsv func;
         }
@@ -85,15 +81,13 @@ class ConverterService {
     /**
      * @return string Encoding for input CSV file in CSV to Excel converting
      */
-    public function getCsvEncoding()
-    {
+    public function getCsvEncoding() {
         return $this->csvEncoding;
     }
     /**
      * @param string $encoding Encoding for input CSV file in CSV to Excel converting
      */
-    public function setCsvEncoding($encoding)
-    {
+    public function setCsvEncoding($encoding) {
         if ($encoding == ''){
             $this->csvEncoding = defaultCsvEncoding;
         }
@@ -102,7 +96,51 @@ class ConverterService {
         }
     }
 
-    private $bomString;
+    private $warningsHandle = WarningHandlingEnum::TryToFix;
+    /**
+     * @return int Method to work with warnings during converting
+     */
+    public function getWarningsHandle()
+    {
+        return $this->warningsHandle;
+    }
+    /**
+     * @param int $warningsHandle  Method to work with warnings during converting
+     */
+    public function setWarningsHandle($warningsHandle)
+    {
+        $this->warningsHandle = $warningsHandle;
+    }
+
+    /**
+     * @var string Config: relative path from service folder to folder for saving warnings files
+     */
+    private $relativeWarningsExportPath = "../reports/";
+    /**
+     * @return string Relative path from service folder to folder for saving exported warnings files
+     */
+    public function getRelativeWarningsExportPath() {
+        return $this->relativeWarningsExportPath;
+    }
+    /**
+     * @param string $relativeWarningsExportPath Relative path from service folder to folder for saving warnings files
+     */
+    public function setRelativeWarningsExportPath($relativeWarningsExportPath) {
+        $this->relativeWarningsExportPath = $relativeWarningsExportPath;
+    }
+
+    private $warnings = array();
+
+    /** warnings. if empty - no warnings.
+     * @return array warnings, occured during converting.
+     */
+    public function GetWarnings() {
+        $stringWarnings = array();
+        foreach ($this->warnings as $warning) {
+           $stringWarnings[] = $warning->ToString();
+        }
+        return $stringWarnings;
+    }
 
     /**
      * Convert csv file to Excel file;
@@ -110,10 +148,15 @@ class ConverterService {
      * @param ExportTypeEnum $exportType Output file format
      * @return string Filename of created file
      * @throws Exception File not found exception
+     * @throws Exception wrong handle method or didn't setted up relativeWarningExportPath
      */
     public function ConvertCsvToExcel($inputFilePath, $exportType) {
         if (!file_exists($inputFilePath)) {
             throw new Exception('File not found!');
+        }
+
+        if (($this->warningsHandle ==  WarningHandlingEnum::WriteToFile) and ($this->relativeWarningsExportPath == '')){
+            throw new Exception("Change warning handle method or set up relativeWarningExportPath.");
         }
 
         ini_set('auto_detect_line_endings',TRUE);
@@ -216,6 +259,21 @@ class ConverterService {
         return $fileName;
     }
     /**
+     * If we move problem values to separate files - write the links to the manifest file
+     */
+    private function WriteWarningsManifest() {
+        if ($this->warningsHandle == WarningHandlingEnum::WriteToFile) {
+            $manifestHandle = fopen($this->relativeWarningsExportPath . "manifest.txt","wb");
+            foreach ($this->warnings  as $warning) {
+                if ($warning->fileName != '') {
+                    fwrite($manifestHandle, $warning->fileName . PHP_EOL);
+                }
+            }
+            fclose($manifestHandle);
+        }
+    }
+
+    /**
      * Convert csv file to XLSX format;
      * @param string $inputFilePath Relative path to csv file;
      * @return string Filename of created file
@@ -225,13 +283,18 @@ class ConverterService {
         $fileName = uniqid() . ".xlsx";
         $filePath = $this->relativeExportPath . $fileName;
         $writer = new \XLSXWriter();
+        $writer->warningHandling = $this->warningsHandle;
+        $writer->waningsOutputPath = $this->relativeWarningsExportPath;
 
         while ( ($data = fgetcsv($handle,0,$this->getDelimiter(), $this->getEnclosure()) ) !== FALSE ) {
             $row = array_map(array($this,"ConvertEncoding"), $data );
             $writer->writeSheetRow('data', $row);
         }
         $writer->writeToFile($filePath);
+        $this->warnings = $writer->getWarnings();
         fclose($handle);
+
+        $this->WriteWarningsManifest();
         return $fileName;
     }
     /**
@@ -244,6 +307,8 @@ class ConverterService {
         $fileName = uniqid() . ".xls";
         $filePath = $this->relativeExportPath . $fileName;
         $workbook = new \Xls\Workbook();
+        $workbook->warningHandling = $this->warningsHandle;
+        $workbook->waningsOutputPath = $this->relativeWarningsExportPath;
         $worksheet = &$workbook->addworksheet();
         $lineCount = 0;
         while ( ($data = fgetcsv($handle,0, $this->getDelimiter(), $this->getEnclosure()) ) !== FALSE ) {
@@ -257,7 +322,10 @@ class ConverterService {
         }
 
         $workbook->save($filePath);
+        $this->warnings = $workbook->getWarnings();
         fclose($handle);
+
+        $this->WriteWarningsManifest();
         return $fileName;
     }
 
@@ -365,8 +433,7 @@ class ExportTypeEnum
     /**
      * Convert file index to enum value.
      */
-    public static function GetTypeFromNumber($fileFormatIndex)
-    {
+    public static function GetTypeFromNumber($fileFormatIndex) {
         switch ($fileFormatIndex) {
             case 0:
                 return ExportTypeEnum::XLSX;
@@ -377,4 +444,15 @@ class ExportTypeEnum
         }
         return ExportTypeEnum::XLSX;
     }
+}
+
+/**
+ * Enumeration for warnings handle during converting.
+ * TryToFix - trying to fix problems in place. Can cause data loss (for example in case of long cell value it will be cutted)
+ * WriteToFix - moving problem cell values to separate files.
+ */
+class WarningHandlingEnum
+{
+    const TryToFix = 0;
+    const WriteToFile = 1;
 }

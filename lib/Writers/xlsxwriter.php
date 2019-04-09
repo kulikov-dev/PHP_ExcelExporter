@@ -4,6 +4,8 @@ if (!defined('ENT_XML1')) {
     define('ENT_XML1', 16);
 }
 
+include_once  'WarningHandling.php';
+
 /*
  * @license MIT License
  * */
@@ -16,6 +18,7 @@ class XLSXWriter
 	//http://office.microsoft.com/en-us/excel-help/excel-specifications-and-limits-HP010073849.aspx
 	const EXCEL_2007_MAX_ROW=1048576;
 	const EXCEL_2007_MAX_COL=16384;
+	const EXCEL_2007_MAX_CELL_LENGTH=32767;
 	//------------------------------------------------------------------
 	protected $title;
 	protected $subject;
@@ -29,6 +32,14 @@ class XLSXWriter
 	protected $temp_files = array();
 	protected $cell_styles = array();
 	protected $number_formats = array();
+
+	protected $warnings = array();
+	public $warningHandling = 0;
+    /**
+     * @var string Config: relative path from service folder to folder for saving files with warnings
+     */
+	public $waningsOutputPath = '';
+    public function getWarnings() { return $this->warnings; }
 
 	public function __construct()
 	{
@@ -50,6 +61,7 @@ class XLSXWriter
 	public function setKeywords($keywords='') { $this->keywords=$keywords; }
 	public function setDescription($description='') { $this->description=$description; }
 	public function setTempDir($tempdir='') { $this->tempdir=$tempdir; }
+
 
 	public function __destruct()
 	{
@@ -361,6 +373,39 @@ class XLSXWriter
 		$this->finalizeSheet($sheet_name);
 	}
 
+    /** Check cell value for excel limitation
+     * @param $value cell value
+     * @param $row_number row index
+     * @param $column_number col index
+     * @return string new cell value
+     */
+    protected function checkForValueLength($value, $row_number, $column_number) {
+	    $strLength = strlen($value);
+	    $output = $value;
+	    if ($strLength > $this::EXCEL_2007_MAX_CELL_LENGTH) {
+           $warning = new WarningInfo($row_number,$column_number,WarningInfo::LongCellValue);
+	       switch ($this->warningHandling) {
+               case 0:
+                   $output = substr($value, 0, $this::EXCEL_2007_MAX_CELL_LENGTH);
+                   break;
+               case 1:
+
+                   $fileName = uniqid() . ".txt";
+                   $filePath = $this->waningsOutputPath . $fileName;
+                   $warning->fileName = $fileName;
+
+                   $handle = fopen($filePath,"wb");
+                   fwrite($handle, $value);
+                   fclose($handle);
+
+                   $output = $fileName;
+                   break;
+           }
+            $this->warnings[] = $warning;
+        }
+        return $output;
+    }
+
 	protected function writeCell(XLSXWriter_BuffererWriter &$file, $row_number, $column_number, $value, $num_format_type, $cell_style_idx)
 	{
 		$cell_name = self::xlsCell($row_number, $column_number);
@@ -370,6 +415,7 @@ class XLSXWriter
 		} elseif (is_string($value) && $value{0}=='='){
 			$file->write('<c r="'.$cell_name.'" s="'.$cell_style_idx.'" t="s"><f>'.self::xmlspecialchars($value).'</f></c>');
 		} else {
+		    $value = $this->checkForValueLength($value, $row_number, $column_number);
 			$file->write('<c r="'.$cell_name.'" s="'.$cell_style_idx.'" t="inlineStr"><is><t>'.self::xmlspecialchars($value).'</t></is></c>');
 		}
 	}
@@ -956,6 +1002,3 @@ class XLSXWriter_BuffererWriter
 	}
 }
 
-
-
-// vim: set filetype=php expandtab tabstop=4 shiftwidth=4 autoindent smartindent:
